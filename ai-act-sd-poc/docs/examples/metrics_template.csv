@@ -1,0 +1,12 @@
+metric,value,notes
+allow_rate,0.62,share of ALLOW
+review_rate,0.30,share of REVIEW
+block_rate,0.08,share of BLOCK
+monotonicity_violations,0,should be zero
+near_threshold_ratio,0.18,share within ±5 around review
+violations_threshold_coherence,0,cases where higher score leads to worse class
+override_rate_total,0.07,total overrides
+override_reason_quality,1.00,100% reasons >=15 chars
+four_eyes_rate,1.00,100% overrides with second approval
+log_completeness,1.00,all mandatory fields present
+latency_p95_ms,120,local target <150

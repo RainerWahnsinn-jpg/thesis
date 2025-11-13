@@ -1,0 +1,11 @@
+[
+  {"order_id":"R-1001","customer_id":"R-A","order_value_eur":8000,"payment_terms_days":30,
+   "overdue_ratio":0.05,"dso_proxy_days":28,"risk_class":"A","country_risk":2,
+   "incoterm":"DDP","is_new_customer":false,"credit_limit_eur":20000,"past_limit_breach":false,
+   "express_flag":false,"data_version":"dv1.0"},
+
+  {"order_id":"R-2002","customer_id":"R-B","order_value_eur":75000,"payment_terms_days":30,
+   "overdue_ratio":0.28,"dso_proxy_days":45,"risk_class":"C","country_risk":4,
+   "incoterm":"EXW","is_new_customer":true,"credit_limit_eur":50000,"past_limit_breach":false,
+   "express_flag":true,"data_version":"dv1.0"}
+]

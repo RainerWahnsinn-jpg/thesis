@@ -1,0 +1,8 @@
+{
+  "triage_id": "ret-2b1a",
+  "route": "REVIEW",
+  "policy_rationale": "Korrosion + Betrag > 1000 + Warranty",
+  "rule_version": "rv1.0",
+  "timestamp_utc": "2025-11-12T10:31:00Z",
+  "service_version": "svc1.0.0"
+}
