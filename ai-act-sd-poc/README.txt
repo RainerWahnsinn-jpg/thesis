@@ -3,6 +3,28 @@ AI Act SD POC – Quick Start (Windows PowerShell)
 
 This README shows how to start the prototype locally and generate artefacts. No changes to existing code are required.
 
+Schnellstart – Backend & UI
+---------------------------
+1. Backend starten
+  ```powershell
+  cd C:\Projekte\thesis\ai-act-sd-poc
+  .\.venv\Scripts\Activate.ps1
+  $env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
+  # Optional: Token-Rollen setzen, z. B. nur für Admin-Test
+  # $env:TOKENS_JSON='{"reviewer@rittal":"reviewer","admin@rittal":"admin"}'
+  python -m uvicorn --app-dir .\backend app:app --host 127.0.0.1 --port 8000
+  ```
+
+2. Oversight-UI starten (neues Fenster, gleiches venv)
+  ```powershell
+  cd C:\Projekte\thesis\ai-act-sd-poc
+  .\.venv\Scripts\Activate.ps1
+  $env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
+  streamlit run .\oversight_ui\app.py
+  ```
+
+  Danach im Browser oben links mit einem gültigen Token anmelden (z. B. `admin@rittal` falls in TOKENS_JSON gesetzt).
+
 Prerequisites
 - Windows with PowerShell
 - Python 3.10+ available as `py` or `python`
@@ -31,6 +53,13 @@ pip install -r .\oversight_ui\requirements.txt
 -----------------------------------------------------------
 # Neues PowerShell-Fenster (empfohlen)
 $env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
+# Auth-Secret setzen (Sprint 5; entweder JSON direkt oder Datei)
+# Beispiel JSON direkt:
+# $env:TOKENS_JSON='{"reviewer@rittal":"reviewer","admin@rittal":"admin"}'
+# oder per Datei außerhalb des Repos:
+# $env:TOKENS_FILE='C:\\Secrets\\thesis_tokens.json'
+# Strenger Modus (ohne Secret fehlschlagen):
+# $env:STRICT_AUTH='1'
 cd C:\Projekte\thesis\ai-act-sd-poc\backend
 python -m uvicorn app:app --host 127.0.0.1 --port 8000
 
@@ -45,6 +74,14 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/health | Format-List
 #   POST /v1/credit/decision
 #   GET  /health
 # (Returns triage is documented but not implemented yet.)
+
+frontend
+
+C:\Projekte\thesis\.venv\Scripts\Activate.ps1
+$env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
+cd C:\Projekte\thesis\ai-act-sd-poc\oversight_ui
+streamlit run app.py
+
 
 4) Quick smoke test (PowerShell)
 --------------------------------
@@ -71,14 +108,19 @@ Invoke-RestMethod -Method Post `
   -ContentType application/json `
   -Body $body | Format-List
 
-5) Start the Oversight UI (liest nur die DB-Datei)
+5) Start the Oversight UI (Login erforderlich)
 --------------------------------------------------
 # Neues PowerShell-Fenster, venv aktiv
 $env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
 cd .\oversight_ui
 streamlit run .\app.py
 
-# Hinweis: Der UI ist der API-Port egal – sie liest direkt aus der SQLite-Datei.
+# Hinweis:
+# - Nach dem Start oben rechts mit Token anmelden, sonst werden keine Daten angezeigt.
+#   Tokens kommen aus $env:TOKENS_JSON oder $env:TOKENS_FILE (siehe Schritt 3).
+# - UI liest die Daten direkt aus der SQLite-Datei (DB_URL). Für Login/Overrides
+#   spricht sie das Backend unter http://127.0.0.1:8000 an. Läuft das Backend auf
+#   einem anderen Port, setze z. B. $env:BACKEND_URL = "http://127.0.0.1:8010".
 
 5a) REVIEW-Beispielfall erzeugen (Port 8000)
 --------------------------------------------
@@ -90,7 +132,7 @@ $body = @{
 } | ConvertTo-Json
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/v1/credit/decision" -Method Post -ContentType "application/json" -Body $body | Format-List
 
-# Streamlit-Seite reloaden; Toggle „Nur REVIEW-Fälle zeigen“ einschalten.
+# Streamlit-Seite reloaden; oben rechts anmelden; Toggle „Nur REVIEW-Fälle zeigen“ einschalten.
 
 5b) DB schnell verifizieren
 ---------------------------
@@ -102,6 +144,16 @@ Test-Path C:\Projekte\thesis\ai-act-sd-poc\backend\governance.db
 $env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
 python -m uvicorn --app-dir .\backend app:app --host 127.0.0.1 --port 8010
 Invoke-RestMethod -Uri http://127.0.0.1:8010/health | Format-List
+
+6a) Optional: HTTPS-Proxy via stunnel (lokal)
+--------------------------------------------
+# In tools\tls siehe README_TLS.txt. Beispiel mit OpenSSL-Zertifikat:
+# 1) cd .\tools\tls
+# 2) openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
+# 3) stunnel stunnel.conf
+# API dann unter https://localhost:8443 erreichbar
+# UI auf HTTPS zeigen:
+#   $env:BACKEND_URL = "https://localhost:8443"
 
 7) Root-DB aufräumen (Konflikte vermeiden)
 ------------------------------------------
@@ -133,5 +185,9 @@ Notes & Troubleshooting
 - If port 8000 is in use, change the port (e.g., `--port 8010`) and set `$env:BACKEND_URL = "http://127.0.0.1:8010"` for the UI.
 - SQLite DB lives at `backend\governance.db`. If locked, close tools that keep it open and retry.
 - If Streamlit cannot reach the API, check BACKEND_URL and that the API is listening on 127.0.0.1:8000.
+- Rate-Limit: Standard 5 req/s (Burst 10). Anpassbar via RATE_LIMIT_RATE/RATE_LIMIT_BURST.
+- Body-Limit: Standard 64KB. Anpassbar via MAX_BODY_BYTES.
+- Audit-Trail: decision_logs ist append-only (UPDATE/DELETE blockiert). prev_hash/row_hash bilden eine Hash-Kette.
+- Export: python .\tools\export_log.py --from <ISO>Z --to <ISO>Z --out data\export.csv
 - The audit log in docs/examples is a sample for metrics; the prototype does not write real logs to disk.
 - Stop servers with Ctrl+C; deactivate venv with `deactivate`.

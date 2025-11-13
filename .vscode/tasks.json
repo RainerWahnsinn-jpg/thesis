@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "options": {
+    "shell": {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "args": ["-NoProfile", "-Command"]
+    }
+  },
+  "tasks": [
+    {
+      "label": "Smoke: POST ALLOW",
+      "type": "shell",
+      "command": "$b=@{order_id='A-DEMO-55';customer_id='C-OK';order_value_eur=8000;payment_terms_days=30;overdue_ratio=0.05;dso_proxy_days=28;risk_class='A';country_risk=2;incoterm='DDP';is_new_customer=$false;credit_limit_eur=20000;past_limit_breach=$false;express_flag=$false;data_version='dv1.0'}|ConvertTo-Json; Invoke-RestMethod -Uri 'http://127.0.0.1:8000/v1/credit/decision' -Method Post -ContentType 'application/json' -Body $b | Format-List"
+    },
+    {
+      "label": "Smoke: POST REVIEW",
+      "type": "shell",
+      "command": "$b=@{order_id='R-DEMO-75';customer_id='C-REVIEW';order_value_eur=60000;payment_terms_days=30;overdue_ratio=0.24;dso_proxy_days=45;risk_class='B';country_risk=3;incoterm='EXW';is_new_customer=$true;credit_limit_eur=50000;past_limit_breach=$false;express_flag=$false;data_version='dv1.0'}|ConvertTo-Json; Invoke-RestMethod -Uri 'http://127.0.0.1:8000/v1/credit/decision' -Method Post -ContentType 'application/json' -Body $b | Format-List"
+    },
+    {
+      "label": "Smoke: POST OVERRIDE (ALLOW)",
+      "type": "shell",
+      "command": "$did='dec-2c921c70f2106a80248b88cdc09c7b007fa74c6eaba81155f76db88232e9a1cc'; $b=@{decision_id=$did;new_decision='ALLOW';override_reason='Manuelle Freigabe nach Prüfung – Zahlungsziel, Kunde stabil';actor_ux='reviewer@rittal'}|ConvertTo-Json; Invoke-RestMethod -Uri 'http://127.0.0.1:8000/v1/credit/override' -Method Post -ContentType 'application/json' -Body $b | Format-List"
+    },
+    {
+      "label": "DB: last 5 rows (id, decision, overridden, second_approval)",
+      "type": "shell",
+      "command": "& ${env:VIRTUAL_ENV}\\Scripts\\python.exe -c \"import sqlite3,sys; p=r'${workspaceFolder}\\ai-act-sd-poc\\backend\\governance.db'; con=sqlite3.connect(p); cur=con.cursor(); cur.execute('SELECT id,decision_id,decision,overridden,second_approval,substr(override_reason,1,40) FROM decision_logs ORDER BY id DESC LIMIT 5'); [print(r) for r in cur.fetchall()]; con.close()\""
+    },
+    {
+      "label": "Export: audit CSV",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "args": [
+        "${workspaceFolder}\\ai-act-sd-poc\\tools\\export_log.py",
+        "--from", "2025-01-01T00:00:00Z",
+        "--to", "2099-12-31T23:59:59Z",
+        "--out", "${workspaceFolder}\\ai-act-sd-poc\\docs\\exports\\audit_export.csv"
+      ]
+    },
+    {
+      "label": "Verify: audit DB",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "args": [
+        "${workspaceFolder}\\ai-act-sd-poc\\tools\\verify_audit.py",
+        "--source", "db",
+        "--db", "${workspaceFolder}\\ai-act-sd-poc\\backend\\governance.db"
+      ]
+    },
+    {
+      "label": "Verify: audit CSV",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "args": [
+        "${workspaceFolder}\\ai-act-sd-poc\\tools\\verify_audit.py",
+        "--source", "csv",
+        "--csv", "${workspaceFolder}\\ai-act-sd-poc\\docs\\exports\\audit_export.csv"
+      ]
+    }
+  ]
+}

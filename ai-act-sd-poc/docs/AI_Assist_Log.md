@@ -5,6 +5,7 @@ Ziel: Transparente Dokumentation des Einsatzes von KI-Assistenz (Copilot) zur Un
 Hinweis: Dieser Baustein unterstützt Annex-IV-Evidenzen (Nachvollziehbarkeit) und ist kein Ersatz für Code-Reviews oder Vier-Augen-Freigaben.
 
 ## Prozessrahmen
+
 - Quelle: Entwickler-Prompt / Kontextbeschreibung (Tickets, Sprintziele)
 - Empfehlung: Vorschlag/Änderung der Assistenz (kurz)
 - Entscheidung: Übernahme/Abweichung inkl. Begründung
@@ -14,6 +15,7 @@ Hinweis: Dieser Baustein unterstützt Annex-IV-Evidenzen (Nachvollziehbarkeit) u
 - Evidenz: Link auf Commit/PR oder Änderungsdiff
 
 ## Template (Eintrag)
+
 - Datum/Zeit (UTC): <YYYY-MM-DDTHH:MM:SSZ>
 - Quelle (Ticket/Prompt): <Kurzbeschreibung>
 - Empfehlung (Assistenz): <Kurzfassung>
@@ -24,7 +26,9 @@ Hinweis: Dieser Baustein unterstützt Annex-IV-Evidenzen (Nachvollziehbarkeit) u
 - Evidenz: <Commit/PR/Run-Log>
 
 ## Initiale Einträge (Sprint 1, Setup)
-1) Datum/Zeit (UTC): 2025-11-13T00:00:00Z
+
+1. Datum/Zeit (UTC): 2025-11-13T00:00:00Z
+
    - Quelle: Sprint 1 – Deterministic Credit API + Append-Only Logging
    - Empfehlung: Entscheidung deterministisch (SHA-256 über kanonisches Request-JSON), Logging append-only mit UNIQUE decision_id, thresholds wie spezifiziert
    - Entscheidung: Übernommen (konform zu Kap. 5/6 und Annex-IV)
@@ -33,7 +37,7 @@ Hinweis: Dieser Baustein unterstützt Annex-IV-Evidenzen (Nachvollziehbarkeit) u
    - Freigabe: N/A (POC)
    - Evidenz: OpenAPI /v1/credit/decision; DB-Row-Counts; Smoke-Tests (ALLOW/REVIEW/BLOCK)
 
-2) Datum/Zeit (UTC): 2025-11-13T00:00:00Z
+2. Datum/Zeit (UTC): 2025-11-13T00:00:00Z
    - Quelle: Dokumentationsbausteine (Annex-IV)
    - Empfehlung: KI-Assistenz-Log und Traceability-Tabelle anlegen
    - Entscheidung: Übernommen
@@ -49,6 +53,7 @@ Hinweis: Dieser Baustein unterstützt Annex-IV-Evidenzen (Nachvollziehbarkeit) u
 > Ziel: Transparenz ohne Ballast. Jede Zeile = 1 Nutzung. Fokus auf WAS übernommen wurde und WIE es verifiziert ist.
 
 ## Template
+
 - Datum/Zeit: YYYY-MM-DD HH:MM (lokal)
 - Tool: Copilot (Inline) | GPT-5 (Chat)
 - Zweck: z. B. „API-Vertrag glätten“, „Override-Validierung formulieren“
