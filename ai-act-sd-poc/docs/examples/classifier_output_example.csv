@@ -1,0 +1,13 @@
+decision_id,true_label,predicted_label,review_probability,model_run_id,run_timestamp_utc,rule_version,data_version
+dec-a1,ALLOW,ALLOW,0.05,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a2,ALLOW,REVIEW,0.32,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a3,REVIEW,REVIEW,0.71,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a4,REVIEW,ALLOW,0.42,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a5,BLOCK,BLOCK,0.91,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a6,BLOCK,REVIEW,0.63,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a7,ALLOW,ALLOW,0.08,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a8,REVIEW,REVIEW,0.77,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-a9,ALLOW,ALLOW,0.15,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-b1,REVIEW,BLOCK,0.58,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-b2,BLOCK,BLOCK,0.89,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0
+dec-b3,REVIEW,REVIEW,0.66,run-demo-01,2025-11-15T08:00:00Z,rv1.0,dv1.0

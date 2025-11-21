@@ -1,5 +1,30 @@
+governance.db
 .venv/
+venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# IDE / Editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS / Trash
+.DS_Store
+Thumbs.db
+
+# Logs / Temp
+logs/
+*.log
+
+# Datenbanken / lokal generierte Files
+*.sqlite3
+*.db
 governance.db
+
+# Umgebungsvariablen / Secrets
 .env
+.env.local
+.env.*
