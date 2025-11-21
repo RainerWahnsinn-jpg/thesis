@@ -62,7 +62,7 @@ def _attempt_login(token: str) -> tuple[bool, dict | None, str]:
 
 def _logout() -> None:
 	st.session_state.pop("auth", None)
-	st.session_state["login_token"] = ""
+	st.session_state["clear_login_token"] = True
 	for key in list(st.session_state.keys()):
 		if key.startswith("override_reason_") or key.startswith("override_decision_"):
 			st.session_state.pop(key)
@@ -84,6 +84,9 @@ def _render_sidebar_auth() -> None:
 			key="sidebar_logout_btn",
 		)
 	else:
+		if st.session_state.get("clear_login_token"):
+			st.session_state["login_token"] = ""
+			st.session_state["clear_login_token"] = False
 		token_value = st.sidebar.text_input("X-Auth-Token", type="password", key="login_token")
 		if st.sidebar.button("Anmelden", type="primary", use_container_width=True, key="sidebar_login_btn"):
 			ok, data, message = _attempt_login(token_value)
@@ -93,7 +96,7 @@ def _render_sidebar_auth() -> None:
 					"role": data.get("role"),
 					"token": token_value,
 				}
-				st.session_state["login_token"] = ""
+				st.session_state["clear_login_token"] = True
 				st.sidebar.success(f"Angemeldet als {data.get('user')} ({data.get('role')})")
 			else:
 				st.sidebar.error(message)
@@ -105,6 +108,8 @@ if "auth" not in st.session_state:
 	st.session_state["auth"] = None
 if "login_token" not in st.session_state:
 	st.session_state["login_token"] = ""
+if "clear_login_token" not in st.session_state:
+	st.session_state["clear_login_token"] = False
 
 header = st.container()
 with header:
@@ -152,6 +157,29 @@ except ValueError:
 env_caption = os.getenv("DB_URL") or "(default)"
 st.caption(
 	f"DB: {rel} (resolved: {resolved}) | DB_URL: {env_caption} | User: {auth.get('user')} ({auth.get('role')})"
+)
+
+export_target = BASE_DIR / "data" / "abb_6_1_decision_logs.csv"
+st.sidebar.markdown("---")
+st.sidebar.subheader("Audit Log Files")
+if export_target.exists():
+	with export_target.open("rb") as fh:
+		st.sidebar.download_button(
+			"Log Files",
+			data=fh.read(),
+			file_name=export_target.name,
+			mime="text/csv",
+			use_container_width=True,
+		)
+	st.sidebar.caption("Direkter Download für Thesis-Screenshot")
+else:
+	st.sidebar.warning("Export noch nicht vorhanden. Bitte tools/export_log.py ausführen.")
+
+# Button, um den Audit-Log-Snapshot am Seitenende anzuzeigen
+show_audit_snapshot = st.sidebar.button(
+	"Audit-Log unten anzeigen",
+	use_container_width=True,
+	key="show_audit_snapshot",
 )
 
 st.sidebar.header("Filter")
@@ -236,6 +264,17 @@ if not filtered_df.empty:
 		).properties(height=260)
 		st.altair_chart(chart, use_container_width=True)
 
+# Audit-CSV einlesen (Anzeige erfolgt später am Seitenende)
+audit_df = None
+if export_target.exists():
+	try:
+		audit_df = pd.read_csv(export_target, comment="#")
+		if "ts_utc" in audit_df.columns:
+			audit_df["ts_utc"] = pd.to_datetime(audit_df["ts_utc"], errors="coerce")
+	except Exception as exc:
+		audit_df = None
+		st.warning(f"Export konnte nicht geladen werden: {exc}")
+
 table_col, detail_col = st.columns([3, 2], gap="large")
 
 with table_col:
@@ -275,7 +314,7 @@ with detail_col:
 		else:
 			ts_string = "-"
 		st.markdown(
-			f"**decision_id:** `{detail_row.get('decision_id')}`  "+
+			f"**decision_id:** `{detail_row.get('decision_id')}`  "
 			f"**Entscheidung:** {detail_row.get('decision')} (Score: {detail_row.get('score')})"
 		)
 		st.markdown(
@@ -380,3 +419,33 @@ with detail_col:
 						st.error(f"Fehler {resp.status_code}: {resp.text}")
 		else:
 			st.info("Overrides sind nur für offene REVIEW-Basisfälle möglich.")
+
+# --- Audit-Log-Snapshot am Seitenende (für Thesis-Screenshot) ---
+if show_audit_snapshot and audit_df is not None and not audit_df.empty:
+	st.markdown("---")
+	st.subheader("Audit-Log Snapshot (CSV)")
+	cols = [
+		"ts_utc",
+		"decision_id",
+		"decision",
+		"overridden",
+		"second_approval",
+		"actor_sys",
+		"actor_ux",
+		"override_reason",
+	]
+	missing = [c for c in cols if c not in audit_df.columns]
+	if missing:
+		cols = [c for c in cols if c in audit_df.columns]
+	view_df = audit_df[cols].copy() if cols else audit_df.head(100)
+	if "ts_utc" in view_df.columns:
+		view_df["ts_utc"] = view_df["ts_utc"].dt.strftime("%Y-%m-%d %H:%M:%S")
+	# nur die ersten Zeilen für einen sauberen Screenshot
+	view_df = view_df.head(10)
+	# None in Textfeldern vermeiden
+	for text_col in ["actor_sys", "actor_ux", "override_reason"]:
+		if text_col in view_df.columns:
+			view_df[text_col] = view_df[text_col].fillna("")
+	st.dataframe(view_df, use_container_width=True, height=280)
+	st.caption("Quelle: data/abb_6_1_decision_logs.csv – Auszug für Abb. 6-1")
+
