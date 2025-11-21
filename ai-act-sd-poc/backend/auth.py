@@ -18,11 +18,20 @@ def _load_tokens():
         if STRICT_AUTH:
             # No tokens configured in strict mode: fail fast
             raise RuntimeError("Auth misconfigured: set TOKENS_JSON or TOKENS_FILE")
-        return {}
+        # Demo fallback for non-strict mode
+        return {
+            "reviewer@rittal": "reviewer",
+            "admin@rittal": "admin",
+        }
     try:
         data = json.loads(raw)
         if not isinstance(data, dict):
-            return {}
+            if STRICT_AUTH:
+                raise RuntimeError("TOKENS_JSON must be a JSON object")
+            return {
+                "reviewer@rittal": "reviewer",
+                "admin@rittal": "admin",
+            }
         # normalize roles
         norm = {}
         for k, v in data.items():
@@ -30,11 +39,21 @@ def _load_tokens():
             if role not in ("reviewer", "admin"):
                 continue
             norm[str(k)] = role
-        return norm or {}
+        if norm:
+            return norm
+        if STRICT_AUTH:
+            raise RuntimeError("TOKENS_JSON must contain at least one valid token")
+        return {
+            "reviewer@rittal": "reviewer",
+            "admin@rittal": "admin",
+        }
     except Exception:
         if STRICT_AUTH:
             raise
-        return {}
+        return {
+            "reviewer@rittal": "reviewer",
+            "admin@rittal": "admin",
+        }
 
 TOKENS = _load_tokens()
 

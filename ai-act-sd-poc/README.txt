@@ -6,28 +6,51 @@ This README shows how to start the prototype locally and generate artefacts. No 
 Schnellstart – Backend & UI
 ---------------------------
 1. Backend starten
-  ```powershell
-  cd C:\Projekte\thesis\ai-act-sd-poc
-  .\.venv\Scripts\Activate.ps1
-  $env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
-  # Optional: Token-Rollen setzen, z. B. nur für Admin-Test
-  # $env:TOKENS_JSON='{"reviewer@rittal":"reviewer","admin@rittal":"admin"}'
-  python -m uvicorn --app-dir .\backend app:app --host 127.0.0.1 --port 8000
-  ```
+
+# Projekt-Root
+cd C:\Projekte\thesis\ai-act-sd-poc
+.\.venv\Scripts\Activate.ps1
+
+# Feste DB angeben
+$env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
+
+# Optional: Rollen-Token setzen
+# Ohne Konfiguration stehen automatisch die Demo-Tokens
+#   reviewer@rittal (Rolle reviewer)
+#   admin@rittal    (Rolle admin)
+# Falls du eigene Tokens setzen willst:
+# $env:TOKENS_JSON='{"custom-user":"reviewer","admin@rittal":"admin"}'
+# Strenger Modus erzwingen (ohne Token kein Start):
+# $env:STRICT_AUTH='1'
+
+# Backend starten
+python -m uvicorn --app-dir .\backend app:app --host 127.0.0.1 --port 8000
+
 
 2. Oversight-UI starten (neues Fenster, gleiches venv)
-  ```powershell
-  cd C:\Projekte\thesis\ai-act-sd-poc
-  .\.venv\Scripts\Activate.ps1
-  $env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
-  streamlit run .\oversight_ui\app.py
-  ```
 
-  Danach im Browser oben links mit einem gültigen Token anmelden (z. B. `admin@rittal` falls in TOKENS_JSON gesetzt).
+# Neues PowerShell-Fenster
+cd C:\Projekte\thesis\ai-act-sd-poc
+.\.venv\Scripts\Activate.ps1
 
-Prerequisites
-- Windows with PowerShell
-- Python 3.10+ available as `py` or `python`
+# UI liest dieselbe SQLite-DB
+$env:DB_URL = "sqlite:///C:/Projekte/thesis/ai-act-sd-poc/backend/governance.db"
+
+# Backend-URL optional überschreiben, falls anderer Port
+# $env:BACKEND_URL = "http://127.0.0.1:8010"
+
+# Streamlit starten
+streamlit run .\oversight_ui\app.py
+
+3. Audit-Export für Screenshots
+
+```powershell
+cd C:\Projekte\thesis\ai-act-sd-poc
+python .\tools\export_log.py --out .\data\abb_6_1_decision_logs.csv
+```
+
+Anschließend steht der Download-Button "abb_6_1_decision_logs.csv" in der UI-Sidebar bereit.
+
 
 1) Create and activate a virtual environment
 -------------------------------------------
